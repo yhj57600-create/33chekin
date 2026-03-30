@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="ko" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>5분 성찰 체크인</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Noto Sans KR', sans-serif; }
+    html, body { height: 100%; margin: 0; }
+    .mood-btn { transition: all 0.25s ease; cursor: pointer; }
+    .mood-btn:hover { transform: scale(1.12); }
+    .mood-btn.selected { transform: scale(1.25); filter: drop-shadow(0 0 8px rgba(0,0,0,0.2)); }
+    .card-enter { animation: cardEnter 0.45s ease forwards; }
+    @keyframes cardEnter { from { opacity: 0; transform: translateY(16px);} to { opacity: 1; transform: translateY(0);} }
+    .fade-in { animation: fadeIn 0.3s ease forwards; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .toast-show { animation: toastIn 0.25s ease forwards; }
+    .toast-hide { animation: toastOut 0.25s ease forwards; }
+    @keyframes toastIn { from { opacity: 0; transform: translateY(10px);} to { opacity: 1; transform: translateY(0);} }
+    @keyframes toastOut { from { opacity: 1; transform: translateY(0);} to { opacity: 0; transform: translateY(10px);} }
+    .step-dot { transition: all 0.25s ease; }
+    .fortune-open { animation: fortuneOpen 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+    @keyframes fortuneOpen {
+      0% { transform: rotateY(0deg) scale(0.8); opacity: 0; }
+      50% { transform: rotateY(90deg) scale(1.1); }
+      100% { transform: rotateY(0deg) scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+<body class="h-full" style="background: linear-gradient(135deg, #fce4ec 0%, #fff5f7 100%); overflow: hidden;">
+  <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-xl text-sm font-medium shadow-lg hidden" style="background: #2d3436; color: #f6f1eb;"></div>
+
+  <div id="setup-modal" class="fixed inset-0 z-40 hidden items-center justify-center px-4" style="background: rgba(0,0,0,0.35);">
+    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-lg font-bold" style="color:#d4758e;">교사용 설정</h3>
+        <button type="button" onclick="closeSetup()" class="text-sm px-2 py-1 rounded-lg" style="background:#faf7f3; color:#6b5b4e;">닫기</button>
+      </div>
+      <p class="text-sm mb-3" style="color:#6b5b4e;">구글 Apps Script 웹앱 주소를 한 번만 저장하면 다음부터 자동으로 사용됩니다.</p>
+      <input id="webapp-url-input" type="url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full rounded-xl px-4 py-3 text-sm mb-3" style="background:#faf7f3;border:1px solid #e8ddd1;color:#2d3436;" />
+      <div class="flex gap-2">
+        <button type="button" onclick="saveTeacherConfig()" class="flex-1 py-3 rounded-xl text-sm font-semibold" style="background:#d4758e;color:#fff;">저장</button>
+        <button type="button" onclick="clearTeacherConfig()" class="flex-1 py-3 rounded-xl text-sm font-semibold" style="background:#f0e9e0;color:#6b5b4e;">연결 해제</button>
+      </div>
+      <p class="text-xs mt-3" style="color:#a84a6a;">처음 한 번만 저장하면 됩니다. 이후에는 입력창이 자동으로 숨겨집니다.</p>
+    </div>
+  </div>
+
+  <div id="app" class="h-full w-full overflow-auto relative z-10">
+    <div id="main-view" class="flex flex-col items-center justify-start min-h-full px-4 py-8">
+      <div class="text-center mb-6 card-enter relative w-full max-w-md">
+        <button type="button" onclick="openSetup()" class="absolute right-0 top-0 px-3 py-2 rounded-xl text-xs font-medium" style="background:#ffffffaa;color:#6b5b4e;border:1px solid #f8bbd0;">교사용 설정</button>
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium mb-3" style="background:#fce4ec;color:#d4758e;">
+          <i data-lucide="sun" style="width:14px;height:14px;"></i>
+          <span id="today-date"></span>
+        </div>
+        <div class="text-center py-3" style="color:#d4b8a8;font-size:0.7rem;opacity:0.7;">made by 너희를 응원하는 양센세 😎</div>
+        <div class="flex items-center justify-center gap-3 mb-1">
+          <span style="font-size:1.5rem;">🌸</span>
+          <h1 class="text-3xl font-bold" style="color:#d4758e;">삼땡반</h1>
+          <span style="font-size:1.5rem;">🌸</span>
+        </div>
+        <h2 class="text-2xl font-bold mb-3" style="color:#d4758e;">5분 체크인</h2>
+        <p class="text-xs leading-relaxed mx-auto" style="color:#b8738a; max-width:280px;">하루 중 5분이라도 온전히 소중한 자신을 살피는 자신이 되길.</p>
+      </div>
+
+      <div class="w-full max-w-md card-enter" style="animation-delay:0.15s;">
+        <div class="rounded-2xl shadow-sm overflow-hidden" style="background:#fff;border:1px solid #f8bbd0;">
+          <div id="checkin-view" class="px-6 pb-6 pt-6">
+            <div class="flex items-center gap-2 mb-4">
+              <span class="text-2xl">✈️</span>
+              <div>
+                <p class="text-sm font-medium" style="color:#d4758e;">등교 체크인</p>
+                <p class="text-xs" style="color:#b8738a;">출석번호를 선택하세요</p>
+              </div>
+            </div>
+            <select id="student-select" class="w-full px-4 py-3 rounded-xl text-sm font-medium mb-3" style="background:#faf7f3;border:1px solid #e8ddd1;color:#2d3436;cursor:pointer;">
+              <option value="">출석번호를 선택해주세요</option>
+              <option value="1">1번 강은지</option>
+              <option value="2">2번 김가은</option>
+              <option value="3">3번 김가현</option>
+              <option value="4">4번 김영훈</option>
+              <option value="5">5번 김윤석</option>
+              <option value="6">6번 박세현</option>
+              <option value="7">7번 박재량</option>
+              <option value="8">8번 박지원</option>
+              <option value="9">9번 박환주</option>
+              <option value="10">10번 변호섭</option>
+              <option value="11">11번 서병수</option>
+              <option value="12">12번 안유찬</option>
+              <option value="13">13번 양승진</option>
+              <option value="14">14번 윤초아</option>
+              <option value="15">15번 이강우</option>
+              <option value="16">16번 이나경</option>
+              <option value="17">17번 이지원</option>
+              <option value="18">18번 이하나</option>
+              <option value="19">19번 장민준</option>
+              <option value="20">20번 정라경</option>
+              <option value="21">21번 정하진</option>
+              <option value="22">22번 조수빈</option>
+              <option value="23">23번 조수연</option>
+              <option value="24">24번 조한성</option>
+              <option value="25">25번 조해윤</option>
+              <option value="26">26번 주하준</option>
+              <option value="27">27번 주현우</option>
+              <option value="28">28번 홍혜인</option>
+            </select>
+            <p class="text-xs leading-relaxed px-3 py-2.5 rounded-lg mb-4" style="background:#fce4ec;color:#a84a6a;">실시간 출석체크가 가능합니다. 첫 화면에서 체크인한 시각이 바로 출석시간으로 저장됩니다.</p>
+            <button id="checkin-btn" class="w-full py-3 rounded-xl text-sm font-semibold transition-all" style="background:#d4758e;color:#fff;" onclick="confirmCheckIn()">탑승 완료 🚪</button>
+          </div>
+
+          <div id="confirmation-view" class="hidden px-6 pb-6 pt-6 text-center">
+            <div class="text-5xl mb-4">✈️</div>
+            <p id="checkin-student-name" class="text-2xl font-bold mb-1" style="color:#d4758e;"></p>
+            <p id="checkin-time-text" class="text-sm mb-2" style="color:#6b5b4e;"></p>
+            <p class="text-xs mb-6" style="color:#b8738a;">출석이 기록되었습니다!</p>
+            <button class="w-full py-3 rounded-xl text-sm font-semibold transition-all" style="background:#d4758e;color:#fff;" onclick="startReflection()">성찰 시작 🌅</button>
+          </div>
+
+          <div id="reflection-view" class="hidden">
+            <div class="flex justify-center gap-2 pt-5 pb-2">
+              <span class="step-dot w-2 h-2 rounded-full" id="dot-0" style="background:#2d3436;"></span>
+              <span class="step-dot w-2 h-2 rounded-full" id="dot-1" style="background:#d5cbc0;"></span>
+              <span class="step-dot w-2 h-2 rounded-full" id="dot-2" style="background:#d5cbc0;"></span>
+              <span class="step-dot w-2 h-2 rounded-full" id="dot-3" style="background:#d5cbc0;"></span>
+            </div>
+            <div class="px-6 pb-2 text-center">
+              <p class="text-5xl font-bold tracking-wide" id="timer-display" style="color:#2d3436;">5:00</p>
+              <p class="text-xs" style="color:#b8738a;">남은 시간</p>
+            </div>
+            <div id="steps-container" class="px-6 pb-6 pt-3" style="min-height:380px;">
+              <div id="step-0" class="step-panel fade-in">
+                <p class="text-sm font-medium mb-1" style="color:#b8738a;">1/4 기분</p>
+                <p class="text-lg font-semibold mb-6" style="color:#d4758e;">당신의 마음은 어떤가요?</p>
+                <div class="flex justify-between gap-3 mb-2">
+                  <button class="mood-btn text-4xl" data-mood="😭" onclick="selectMood('😭')">😭</button>
+                  <button class="mood-btn text-4xl" data-mood="😠" onclick="selectMood('😠')">😠</button>
+                  <button class="mood-btn text-4xl" data-mood="😨" onclick="selectMood('😨')">😨</button>
+                  <button class="mood-btn text-4xl" data-mood="😐" onclick="selectMood('😐')">😐</button>
+                </div>
+                <div class="flex justify-between gap-3">
+                  <button class="mood-btn text-4xl" data-mood="😊" onclick="selectMood('😊')">😊</button>
+                  <button class="mood-btn text-4xl" data-mood="😄" onclick="selectMood('😄')">😄</button>
+                  <button class="mood-btn text-4xl" data-mood="🤩" onclick="selectMood('🤩')">🤩</button>
+                  <button class="mood-btn text-4xl" data-mood="🥰" onclick="selectMood('🥰')">🥰</button>
+                </div>
+              </div>
+              <div id="step-1" class="step-panel hidden fade-in">
+                <p class="text-sm font-medium mb-1" style="color:#6b5b4e;">2/4 어제</p>
+                <p class="text-lg font-semibold mb-3" style="color:#2d3436;">어제는 어떤 하루를 보냈나요?</p>
+                <textarea id="yesterday-input" rows="4" class="w-full rounded-xl px-4 py-3 text-sm" style="background:#faf7f3;border:1px solid #e8ddd1;color:#2d3436;" placeholder="예시: ✨ 잘한 일, 📚 배운 점, 🎯 도전 등을 포함해서 자유롭게 적어주세요..."></textarea>
+              </div>
+              <div id="step-2" class="step-panel hidden fade-in">
+                <p class="text-sm font-medium mb-1" style="color:#6b5b4e;">3/4 오늘</p>
+                <p class="text-lg font-semibold mb-3" style="color:#2d3436;">오늘은 어떻게 보낼 계획인가요?</p>
+                <textarea id="today-input" rows="4" class="w-full rounded-xl px-4 py-3 text-sm" style="background:#faf7f3;border:1px solid #e8ddd1;color:#2d3436;" placeholder="예시: 🎯 주요 목표, 📋 할 일, ⏰ 우선순위 등을 포함해서 자유롭게 적어주세요..."></textarea>
+              </div>
+              <div id="step-3" class="step-panel hidden fade-in">
+                <p class="text-sm font-medium mb-1" style="color:#6b5b4e;">4/4 감사 & 다짐</p>
+                <p class="text-base font-semibold mb-2" style="color:#2d3436;">오늘 하루 중 감사할 것들이 있나요?</p>
+                <textarea id="gratitude-input" rows="2" class="w-full rounded-xl px-4 py-3 text-sm mb-3" style="background:#faf7f3;border:1px solid #e8ddd1;color:#2d3436;" placeholder="예시: 🌞 좋은 날씨, 💬 소중한 사람, 🎉 즐거운 일 등..."></textarea>
+                <p class="text-base font-semibold mb-2" style="color:#2d3436;">오늘 하루를 어떻게 보내고 싶은가요?</p>
+                <textarea id="promise-input" rows="2" class="w-full rounded-xl px-4 py-3 text-sm" style="background:#faf7f3;border:1px solid #e8ddd1;color:#2d3436;" placeholder="예시: 💪 열심히, 😊 긍정적으로, 🤝 친절하게 등..."></textarea>
+              </div>
+            </div>
+            <div class="px-6 pb-6 flex gap-3">
+              <button id="prev-btn" class="hidden flex-1 py-3 rounded-xl text-sm font-medium" style="background:#f0e9e0;color:#6b5b4e;" onclick="prevStep()">← 이전</button>
+              <button id="next-btn" class="flex-1 py-3 rounded-xl text-sm font-semibold" style="background:#2d3436;color:#f6f1eb;" onclick="nextStep()">다음 →</button>
+            </div>
+          </div>
+
+          <div id="fortune-view" class="hidden px-6 pb-6 pt-6 text-center">
+            <p class="text-xs font-medium mb-4" style="color:#6b5b4e;">✨ 성찰을 완료했습니다!</p>
+            <div id="fortune-cookie" class="fortune-open text-7xl mb-8 cursor-pointer select-none" onclick="openFortune()">🥠</div>
+            <div id="fortune-message" class="hidden bg-gradient-to-br from-yellow-50 to-amber-50 rounded-xl p-6 mb-6" style="border:2px solid #ffd93d;">
+              <p class="text-xs font-medium mb-3" style="color:#b8860b;">🌟 오늘의 응원 메시지</p>
+              <p id="fortune-text" class="text-sm font-semibold italic leading-relaxed" style="color:#2d3436;"></p>
+              <p class="text-xs mt-4" style="color:#a89888;">오늘도 당신을 응원합니다! 💫</p>
+            </div>
+            <button class="w-full py-3 rounded-xl text-sm font-semibold" style="background:#2d3436;color:#f6f1eb;" onclick="resetAll()">다시 시작 🔄</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+const STUDENTS = [
+  { num: 1, name: '강은지' }, { num: 2, name: '김가은' }, { num: 3, name: '김가현' },
+  { num: 4, name: '김영훈' }, { num: 5, name: '김윤석' }, { num: 6, name: '박세현' },
+  { num: 7, name: '박재량' }, { num: 8, name: '박지원' }, { num: 9, name: '박환주' },
+  { num: 10, name: '변호섭' }, { num: 11, name: '서병수' }, { num: 12, name: '안유찬' },
+  { num: 13, name: '양승진' }, { num: 14, name: '윤초아' }, { num: 15, name: '이강우' },
+  { num: 16, name: '이나경' }, { num: 17, name: '이지원' }, { num: 18, name: '이하나' },
+  { num: 19, name: '장민준' }, { num: 20, name: '정라경' }, { num: 21, name: '정하진' },
+  { num: 22, name: '조수빈' }, { num: 23, name: '조수연' }, { num: 24, name: '조한성' },
+  { num: 25, name: '조해윤' }, { num: 26, name: '주하준' }, { num: 27, name: '주현우' },
+  { num: 28, name: '홍혜인' }
+];
+const FORTUNE_MESSAGES = [
+  '매일 조금씩 나아지면 결국 큰 변화가 돼요. 오늘도 화이팅!',
+  '당신은 충분히 잘하고 있어요. 자신감을 가져보세요.',
+  '오늘 당신의 노력이 내일의 성공을 만들어요.',
+  '꾸준함이 최고의 능력입니다. 계속 나아가세요.',
+  '작은 성공도 축하할 가치가 있습니다. 자랑스러워하세요.',
+  '완벽하지 않아도 괜찮습니다. 그대로도 충분해요.',
+  '당신은 충분히 훌륭합니다. 자기 자신을 믿으세요.',
+  '한 발씩 앞으로 나아가면 됩니다. 천천히 가도 괜찮아요.',
+  '오늘이 새로운 시작입니다. 설레는 마음으로 시작해요.',
+  '오늘 하루도 함께해줘서 정말 고마워요. 화이팅! 💫'
+];
+
+let currentStep = 0;
+let selectedMood = '';
+let selectedStudent = null;
+let timerInterval = null;
+let timeRemaining = 300;
+let attendanceRecord = null;
+let currentAttendanceId = null;
+const STORAGE_KEY = 'class_checkin_teacher_webapp_url';
+
+const today = new Date();
+document.getElementById('today-date').textContent = today.toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'short' });
+document.getElementById('student-select').addEventListener('change', (e) => {
+  const value = parseInt(e.target.value, 10);
+  selectedStudent = STUDENTS.find(s => s.num === value) || null;
+});
+
+function openSetup() {
+  document.getElementById('webapp-url-input').value = localStorage.getItem(STORAGE_KEY) || '';
+  document.getElementById('setup-modal').classList.remove('hidden');
+  document.getElementById('setup-modal').classList.add('flex');
+}
+function closeSetup() {
+  document.getElementById('setup-modal').classList.add('hidden');
+  document.getElementById('setup-modal').classList.remove('flex');
+}
+function saveTeacherConfig() {
+  const url = document.getElementById('webapp-url-input').value.trim();
+  if (!url) return showToast('웹앱 주소를 입력해주세요.');
+  localStorage.setItem(STORAGE_KEY, url);
+  closeSetup();
+  showToast('교사용 연결이 저장되었습니다.');
+}
+function clearTeacherConfig() {
+  localStorage.removeItem(STORAGE_KEY);
+  document.getElementById('webapp-url-input').value = '';
+  showToast('저장된 연결을 삭제했습니다.');
+}
+if (!localStorage.getItem(STORAGE_KEY) || new URLSearchParams(location.search).get('setup') === '1') {
+  setTimeout(openSetup, 250);
+}
+
+function formatLocalTime(dateObj) {
+  return dateObj.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+}
+function minutesOfDay(dateObj) {
+  return dateObj.getHours() * 60 + dateObj.getMinutes();
+}
+function isLate(minutes) {
+  const threshold = 8 * 60 + 40; // 08:40 기준
+  return minutes > threshold;
+}
+
+async function postToSheet(payload) {
+  const url = localStorage.getItem(STORAGE_KEY);
+  if (!url) return { ok: true, skipped: true };
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+    const text = await res.text();
+    let json;
+    try { json = JSON.parse(text); } catch { json = { raw: text }; }
+    if (!res.ok) throw new Error(json.message || '시트 저장 실패');
+    return { ok: true, data: json };
+  } catch (err) {
+    console.error(err);
+    return { ok: false, error: err.message || '시트 저장 실패' };
+  }
+}
+
+async function confirmCheckIn() {
+  const select = document.getElementById('student-select');
+  const value = parseInt(select.value, 10);
+  selectedStudent = STUDENTS.find(s => s.num === value) || selectedStudent;
+  if (!selectedStudent) {
+    showToast('출석번호를 선택해주세요!');
+    return;
+  }
+
+  const now = new Date();
+  attendanceRecord = {
+    student_number: String(selectedStudent.num),
+    student_name: selectedStudent.name,
+    attendance_date: now.toLocaleDateString('ko-KR'),
+    attendance_time: formatLocalTime(now),
+    attendance_iso: now.toISOString(),
+    attendance_minutes: minutesOfDay(now),
+    is_late: isLate(minutesOfDay(now)) ? 'Y' : 'N',
+    saved_at: now.toISOString()
+  };
+
+  const saveResult = await postToSheet({ action: 'attendance', record: attendanceRecord });
+  if (!saveResult.ok) {
+    showToast('시트 연결 저장에 실패했습니다. 교사용 설정을 확인해주세요.');
+    return;
+  }
+  currentAttendanceId = saveResult.data && (saveResult.data.rowId || saveResult.data.id || '');
+
+  document.getElementById('checkin-student-name').textContent = `${selectedStudent.num}번 ${selectedStudent.name}`;
+  document.getElementById('checkin-time-text').textContent = `출석시간 ${attendanceRecord.attendance_time}`;
+  document.getElementById('checkin-view').classList.add('hidden');
+  document.getElementById('confirmation-view').classList.remove('hidden');
+}
+
+function startReflection() {
+  document.getElementById('confirmation-view').classList.add('hidden');
+  document.getElementById('reflection-view').classList.remove('hidden');
+  currentStep = 0;
+  showStep(0);
+  startTimer();
+}
+function startTimer() {
+  timeRemaining = 300;
+  clearInterval(timerInterval);
+  updateTimerDisplay();
+  timerInterval = setInterval(() => {
+    if (timeRemaining > 0) {
+      timeRemaining -= 1;
+      updateTimerDisplay();
+    } else {
+      clearInterval(timerInterval);
+    }
+  }, 1000);
+}
+function updateTimerDisplay() {
+  const mins = Math.floor(timeRemaining / 60);
+  const secs = timeRemaining % 60;
+  document.getElementById('timer-display').textContent = `${mins}:${String(secs).padStart(2, '0')}`;
+}
+function showStep(idx) {
+  document.querySelectorAll('.step-panel').forEach(p => p.classList.add('hidden'));
+  const panel = document.getElementById(`step-${idx}`);
+  panel.classList.remove('hidden');
+  for (let i = 0; i < 4; i++) {
+    document.getElementById(`dot-${i}`).style.background = i === idx ? '#2d3436' : '#d5cbc0';
+  }
+  document.getElementById('prev-btn').classList.toggle('hidden', idx === 0);
+  document.getElementById('next-btn').textContent = idx === 3 ? '완료 ✨' : '다음 →';
+}
+function selectMood(mood) {
+  selectedMood = mood;
+  document.querySelectorAll('.mood-btn').forEach(btn => btn.classList.toggle('selected', btn.dataset.mood === mood));
+}
+function prevStep() {
+  if (currentStep > 0) { currentStep -= 1; showStep(currentStep); }
+}
+async function nextStep() {
+  if (currentStep === 0 && !selectedMood) return showToast('기분을 선택해주세요 😊');
+  if (currentStep === 1 && !document.getElementById('yesterday-input').value.trim()) return showToast('어제에 대해 적어주세요 📝');
+  if (currentStep === 2 && !document.getElementById('today-input').value.trim()) return showToast('오늘 계획을 적어주세요 🎯');
+  if (currentStep === 3 && !document.getElementById('gratitude-input').value.trim()) return showToast('감사할 것들을 적어주세요 🙏');
+  if (currentStep < 3) {
+    currentStep += 1;
+    showStep(currentStep);
+    return;
+  }
+
+  clearInterval(timerInterval);
+  const btn = document.getElementById('next-btn');
+  btn.disabled = true;
+  btn.textContent = '저장 중...';
+
+  const reflection = {
+    action: 'reflection',
+    rowId: currentAttendanceId,
+    record: {
+      ...attendanceRecord,
+      mood: selectedMood,
+      yesterday: document.getElementById('yesterday-input').value.trim(),
+      today_plan: document.getElementById('today-input').value.trim(),
+      gratitude: document.getElementById('gratitude-input').value.trim(),
+      today_promise: document.getElementById('promise-input').value.trim(),
+      reflection_completed_at: new Date().toISOString()
+    }
+  };
+
+  const saveResult = await postToSheet(reflection);
+  btn.disabled = false;
+  btn.textContent = '완료 ✨';
+  if (!saveResult.ok) {
+    showToast('성찰 저장에 실패했습니다. 교사용 설정을 확인해주세요.');
+    return;
+  }
+  showToast('성찰이 저장되었습니다 🌿');
+  showFortune();
+}
+function showFortune() {
+  document.getElementById('reflection-view').classList.add('hidden');
+  document.getElementById('fortune-view').classList.remove('hidden');
+}
+function openFortune() {
+  document.getElementById('fortune-cookie').style.display = 'none';
+  const msg = document.getElementById('fortune-message');
+  document.getElementById('fortune-text').textContent = FORTUNE_MESSAGES[Math.floor(Math.random() * FORTUNE_MESSAGES.length)];
+  msg.classList.remove('hidden');
+  msg.classList.add('fortune-open');
+}
+function resetAll() {
+  clearInterval(timerInterval);
+  currentStep = 0;
+  selectedMood = '';
+  selectedStudent = null;
+  attendanceRecord = null;
+  currentAttendanceId = null;
+  document.getElementById('student-select').value = '';
+  document.querySelectorAll('.mood-btn').forEach(btn => btn.classList.remove('selected'));
+  document.getElementById('yesterday-input').value = '';
+  document.getElementById('today-input').value = '';
+  document.getElementById('gratitude-input').value = '';
+  document.getElementById('promise-input').value = '';
+  document.getElementById('fortune-view').classList.add('hidden');
+  document.getElementById('confirmation-view').classList.add('hidden');
+  document.getElementById('reflection-view').classList.add('hidden');
+  document.getElementById('checkin-view').classList.remove('hidden');
+  document.getElementById('fortune-cookie').style.display = 'block';
+  document.getElementById('fortune-message').classList.add('hidden');
+  document.getElementById('next-btn').textContent = '다음 →';
+  updateTimerDisplay();
+}
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.remove('hidden', 'toast-hide');
+  toast.classList.add('toast-show');
+  setTimeout(() => {
+    toast.classList.remove('toast-show');
+    toast.classList.add('toast-hide');
+    setTimeout(() => toast.classList.add('hidden'), 250);
+  }, 1800);
+}
+
+lucide.createIcons();
+updateTimerDisplay();
+</script>
+</body>
+</html>
