@@ -274,7 +274,12 @@ function goPromise() {
   document.getElementById("promise-view").classList.remove("hidden");
 }
 
-async function saveReflection() {
+function goFinal() {
+  document.getElementById("promise-view").classList.add("hidden");
+  document.getElementById("final-view").classList.remove("hidden");
+}
+
+function saveReflection() {
   if (isSending) return;
 
   const promiseValue = document.getElementById("promise-input").value.trim();
@@ -282,9 +287,6 @@ async function saveReflection() {
     alert("오늘의 다짐을 적어주세요!");
     return;
   }
-
-  isSending = true;
-  document.getElementById("save-btn").disabled = true;
 
   const data = {
     type: "reflection",
@@ -297,18 +299,26 @@ async function saveReflection() {
     time: new Date().toISOString()
   };
 
-  const ok = await send(data);
+  // 먼저 마지막 화면으로 이동
+  goFinal();
+  showMsg("저장 중...");
 
-  if (!ok) {
-    showMsg("⚠️ 저장이 불안정했어요. 그래도 마지막 화면으로 이동합니다.");
-    document.getElementById("save-btn").disabled = false;
-  } else {
-    showMsg("저장 완료 🌿");
-  }
+  // 저장은 뒤에서 진행
+  isSending = true;
+  document.getElementById("save-btn").disabled = true;
 
-  isSending = false;
-  document.getElementById("promise-view").classList.add("hidden");
-  document.getElementById("final-view").classList.remove("hidden");
+  send(data)
+    .then((ok) => {
+      if (ok) {
+        showMsg("저장 완료 🌿");
+      } else {
+        showMsg("⚠️ 저장이 불안정했어요. 그래도 마지막 화면으로 이동했습니다.");
+      }
+    })
+    .finally(() => {
+      isSending = false;
+      document.getElementById("save-btn").disabled = false;
+    });
 }
 
 function openCookie() {
@@ -351,10 +361,16 @@ function resetAll() {
 
 async function send(data) {
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
     const res = await fetch(WEB_APP_URL, {
       method: "POST",
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
+      signal: controller.signal
     });
+
+    clearTimeout(timeoutId);
 
     if (!res.ok) throw new Error();
     return true;
