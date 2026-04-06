@@ -144,10 +144,7 @@ document.getElementById("checkin-btn").disabled = true;
 const ok = await send({type:"attendance", ...attendanceData});
 
 if(!ok){
-document.getElementById("msg").innerText="출석 실패 ❗";
-isSending=false;
-document.getElementById("checkin-btn").disabled=false;
-return;
+document.getElementById("msg").innerText="⚠️ 네트워크 불안정 (기록은 계속 진행)";
 }
 
 document.getElementById("student-name").innerText = val+"번";
@@ -206,13 +203,18 @@ isSending=false;
 // 전송
 async function send(data){
 try{
-const res = await fetch(WEB_APP_URL,{
-method:"POST",
-body:JSON.stringify(data)
-});
-return res.ok;
-}catch{
-return false;
+  const res = await fetch(WEB_APP_URL,{
+    method:"POST",
+    body:JSON.stringify(data)
+  });
+
+  if(!res.ok) throw new Error();
+
+  return true;
+
+}catch(e){
+  console.log("전송 실패", e);
+  return false;
 }
 }
 
