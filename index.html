@@ -105,7 +105,7 @@
   </select>
 
   <button id="checkin-btn" onclick="confirmCheckIn()" class="w-full bg-gradient-to-r from-pink-400 to-rose-400 text-white py-3 rounded-xl shadow-md font-semibold hover:scale-[1.01] transition">
-    탑승 완료 🚪
+    등교 완료 🚪
   </button>
 
   <p class="text-xs text-center text-gray-400 mt-3">
@@ -262,12 +262,7 @@ function showMsg(text) {
   document.getElementById("msg").innerText = text || "";
 }
 
-function showCheckinSuccess(goToConfirmation) {
-  document.getElementById("student-name").innerText = student + "번";
-  document.getElementById("time-text").innerText = attendanceData.time;
-  document.getElementById("checkin-view").classList.add("hidden");
-  document.getElementById("confirmation-view").classList.remove("hidden");
-}
+
 function showCheckinSuccess(nextFn){
   const overlay = document.getElementById("checkin-success-overlay");
   const card = document.getElementById("checkin-success-card");
@@ -301,7 +296,13 @@ function confirmCheckIn() {
     late: minutes > (8 * 60 + 40) ? "지각" : "정상"
   };
 
-  goToConfirmation();
+  showCheckinSuccess(goToConfirmation);
+  function goToConfirmation() {
+  document.getElementById("student-name").innerText = student + "번";
+  document.getElementById("time-text").innerText = attendanceData.time;
+  document.getElementById("checkin-view").classList.add("hidden");
+  document.getElementById("confirmation-view").classList.remove("hidden");
+}
 
   isSending = true;
   document.getElementById("checkin-btn").disabled = true;
