@@ -296,6 +296,14 @@ function confirmCheckIn() {
     late: minutes > (8 * 60 + 40) ? "지각" : "정상"
   };
 
+attendanceData = {
+  student: val,
+  time: now.toLocaleTimeString(),
+  iso: now.toISOString(),
+  minutes: minutes,
+  late: minutes >= (9 * 60) ? "지각" : "정상"
+};
+
 function goToConfirmation() {
   document.getElementById("student-name").innerText = student + "번";
   document.getElementById("time-text").innerText = "출석 시간: " + attendanceData.time;
@@ -320,6 +328,8 @@ function goToConfirmation() {
   document.getElementById("checkin-view").classList.add("hidden");
   document.getElementById("confirmation-view").classList.remove("hidden");
 }
+
+showCheckinSuccess(goToConfirmation);
 
   isSending = true;
   document.getElementById("checkin-btn").disabled = true;
