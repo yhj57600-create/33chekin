@@ -48,43 +48,70 @@
     온전히 소중한 자신을 돌아보자
   </p>
 
-  <div id="checkin-view">
-    <select id="student-select" class="w-full p-3 border border-pink-200 rounded-xl mb-4 bg-pink-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-pink-300">
-      <option value="">출석번호 선택</option>
-      <option value="1">1번 강은지</option>
-      <option value="2">2번 김가은</option>
-      <option value="3">3번 김가현</option>
-      <option value="4">4번 김영훈</option>
-      <option value="5">5번 김윤석</option>
-      <option value="6">6번 박세현</option>
-      <option value="7">7번 박재량</option>
-      <option value="8">8번 박지원</option>
-      <option value="9">9번 박환주</option>
-      <option value="10">10번 변호섭</option>
-      <option value="11">11번 서병수</option>
-      <option value="12">12번 안유찬</option>
-      <option value="13">13번 양승진</option>
-      <option value="14">14번 윤초아</option>
-      <option value="15">15번 이강우</option>
-      <option value="16">16번 이나경</option>
-      <option value="17">17번 이지원</option>
-      <option value="18">18번 이하나</option>
-      <option value="19">19번 장민준</option>
-      <option value="20">20번 정라경</option>
-      <option value="21">21번 정하진</option>
-      <option value="22">22번 조수빈</option>
-      <option value="23">23번 조수연</option>
-      <option value="24">24번 조한성</option>
-      <option value="25">25번 조해윤</option>
-      <option value="26">26번 주하준</option>
-      <option value="27">27번 주현우</option>
-      <option value="28">28번 홍혜인</option>
-    </select>
+  <div id="checkin-view" class="rounded-2xl bg-gradient-to-br from-pink-50 to-rose-50 border border-pink-100 p-5 shadow-sm">
 
-    <button id="checkin-btn" onclick="confirmCheckIn()" class="w-full bg-gradient-to-r from-pink-400 to-rose-400 text-white py-3 rounded-xl shadow-md font-semibold hover:scale-[1.01] transition">
-      탑승 완료 🚪
-    </button>
+  <div class="flex items-center gap-3 mb-4">
+    <div class="flex h-12 w-12 items-center justify-center rounded-full bg-pink-100 text-2xl shadow-sm">
+      🚪
+    </div>
+    <div>
+      <p class="text-base font-bold text-pink-500">등교 체크인</p>
+      <p class="text-xs text-gray-500">출석번호를 선택하고 오늘의 시작을 열어보세요</p>
+    </div>
   </div>
+
+  <div class="rounded-xl bg-white/80 border border-pink-100 px-4 py-3 mb-4">
+    <p class="text-xs text-pink-500 font-semibold mb-1">오늘의 안내</p>
+    <p class="text-sm text-gray-600 leading-relaxed">
+      번호를 선택한 뒤 체크인을 누르면<br>
+      출석 시간이 바로 기록돼요 ✨
+    </p>
+  </div>
+
+  <label for="student-select" class="block text-sm font-medium text-gray-600 mb-2">
+    출석번호 선택
+  </label>
+
+  <select id="student-select" class="w-full p-3 border border-pink-200 rounded-xl mb-4 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-pink-300 shadow-sm">
+    <option value="">출석번호 선택</option>
+    <option value="1">1번 강은지</option>
+    <option value="2">2번 김가은</option>
+    <option value="3">3번 김가현</option>
+    <option value="4">4번 김영훈</option>
+    <option value="5">5번 김윤석</option>
+    <option value="6">6번 박세현</option>
+    <option value="7">7번 박재량</option>
+    <option value="8">8번 박지원</option>
+    <option value="9">9번 박환주</option>
+    <option value="10">10번 변호섭</option>
+    <option value="11">11번 서병수</option>
+    <option value="12">12번 안유찬</option>
+    <option value="13">13번 양승진</option>
+    <option value="14">14번 윤초아</option>
+    <option value="15">15번 이강우</option>
+    <option value="16">16번 이나경</option>
+    <option value="17">17번 이지원</option>
+    <option value="18">18번 이하나</option>
+    <option value="19">19번 장민준</option>
+    <option value="20">20번 정라경</option>
+    <option value="21">21번 정하진</option>
+    <option value="22">22번 조수빈</option>
+    <option value="23">23번 조수연</option>
+    <option value="24">24번 조한성</option>
+    <option value="25">25번 조해윤</option>
+    <option value="26">26번 주하준</option>
+    <option value="27">27번 주현우</option>
+    <option value="28">28번 홍혜인</option>
+  </select>
+
+  <button id="checkin-btn" onclick="confirmCheckIn()" class="w-full bg-gradient-to-r from-pink-400 to-rose-400 text-white py-3 rounded-xl shadow-md font-semibold hover:scale-[1.01] transition">
+    탑승 완료 🚪
+  </button>
+
+  <p class="text-xs text-center text-gray-400 mt-3">
+    오늘도 안전하게 도착했는지 확인해요 🌸
+  </p>
+</div>
 
   <div id="confirmation-view" class="hidden text-center">
     <p id="student-name" class="text-lg font-bold mb-2"></p>
@@ -150,7 +177,13 @@
       다시 시작
     </button>
   </div>
-
+<div id="checkin-success-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-white/70 backdrop-blur-sm">
+  <div id="checkin-success-card" class="rounded-3xl bg-white px-8 py-10 shadow-2xl border border-pink-100 text-center">
+    <div class="mb-4 text-6xl">🌸</div>
+    <p class="text-2xl font-bold text-pink-500 mb-2">체크인 완료!</p>
+    <p class="text-sm text-gray-500 mb-4">오늘도 무사히 등교했어요 ✨</p>
+  </div>
+</div>
   <p id="msg" class="text-center mt-3 text-sm"></p>
 
 </div>
@@ -229,13 +262,23 @@ function showMsg(text) {
   document.getElementById("msg").innerText = text || "";
 }
 
-function goToConfirmation() {
+function showCheckinSuccess(goToConfirmation) {
   document.getElementById("student-name").innerText = student + "번";
   document.getElementById("time-text").innerText = attendanceData.time;
   document.getElementById("checkin-view").classList.add("hidden");
   document.getElementById("confirmation-view").classList.remove("hidden");
 }
+function showCheckinSuccess(nextFn){
+  const overlay = document.getElementById("checkin-success-overlay");
+  const card = document.getElementById("checkin-success-card");
 
+  overlay.classList.remove("hidden");
+
+  setTimeout(()=>{
+    overlay.classList.add("hidden");
+    nextFn();
+  }, 1200);
+}
 function confirmCheckIn() {
   if (isSending) return;
 
