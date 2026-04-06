@@ -25,24 +25,31 @@
 </style>
 </head>
 
-<body class="bg-pink-50 flex justify-center items-center min-h-screen">
+<body class="min-h-screen flex justify-center items-center bg-gradient-to-br from-pink-100 via-rose-50 to-yellow-50">
 
-<div class="bg-white p-6 rounded-2xl shadow w-96">
+<div class="bg-white/95 backdrop-blur-sm p-6 rounded-3xl shadow-xl border border-pink-100 w-96">
+
+  <div class="flex justify-center mb-3">
+    <div class="inline-flex items-center gap-2 rounded-full bg-pink-100 px-4 py-1.5 text-xs font-medium text-pink-600 shadow-sm">
+      <span>☀️</span>
+      <span id="today-date"></span>
+    </div>
+  </div>
 
   <div class="text-center text-xs mb-2 text-gray-500">
     made by 너희를 응원하는 양센세 😎
   </div>
-
-  <h1 class="text-xl font-bold text-center mb-2 text-pink-500">
+  <h1 class="text-2xl font-bold text-center mb-2 text-pink-500">
     🌸 삼땡반 체크인
   </h1>
 
-  <p class="text-xs text-center text-pink-400 mb-4">
-    하루 중 5분이라도 온전히 소중한 자신을 돌아보자
+  <p class="text-sm text-center text-pink-400 mb-5 leading-relaxed">
+    하루 중 5분이라도<br>
+    온전히 소중한 자신을 돌아보자
   </p>
 
   <div id="checkin-view">
-    <select id="student-select" class="w-full p-2 border rounded mb-3">
+    <select id="student-select" class="w-full p-3 border border-pink-200 rounded-xl mb-4 bg-pink-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-pink-300">
       <option value="">출석번호 선택</option>
       <option value="1">1번 강은지</option>
       <option value="2">2번 김가은</option>
@@ -74,7 +81,7 @@
       <option value="28">28번 홍혜인</option>
     </select>
 
-    <button id="checkin-btn" onclick="confirmCheckIn()" class="w-full bg-pink-500 text-white py-2 rounded">
+    <button id="checkin-btn" onclick="confirmCheckIn()" class="w-full bg-gradient-to-r from-pink-400 to-rose-400 text-white py-3 rounded-xl shadow-md font-semibold hover:scale-[1.01] transition">
       탑승 완료 🚪
     </button>
   </div>
@@ -150,6 +157,16 @@
 
 <script>
 const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxJsg89gQfKIE0CPP4CYzYWc4cwTYaTsgeTs178J9_T4M5BvhBTmTW8rgEdPdi5H4BCjQ/exec';
+  document.addEventListener("DOMContentLoaded", function () {
+  const today = new Date();
+  document.getElementById("today-date").innerText =
+    today.toLocaleDateString("ko-KR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      weekday: "short"
+    });
+});
 const QUOTES = [
 "매일 조금씩 나아지면 결국 큰 변화가 돼요.",
 "실패는 성공의 과정일 뿐입니다.",
