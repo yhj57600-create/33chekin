@@ -109,7 +109,7 @@
   </button>
 
   <p class="text-xs text-center text-gray-400 mt-3">
-    오늘도 안전하게 등교했어요 🌸
+    해 뜨기 전이 가장 어둡다 
   </p>
 </div>
 
@@ -332,7 +332,7 @@ showCheckinSuccess(goToConfirmation);
   send({ type: "attendance", ...attendanceData })
     .then((ok) => {
       if (!ok) {
-        showMsg("⚠️ 출석 저장이 불안정했어요. 그래도 계속 진행 가능합니다.");
+        showMsg("⚠️ 저장은 쓰는 중에 자동으로 됩니다. 걱정 마세요.");
       }
     })
     .finally(() => {
@@ -395,7 +395,7 @@ function saveReflection() {
       if (ok) {
         showMsg("저장 완료 🌿");
       } else {
-        showMsg("⚠️ 저장이 불안정했지만, 걱정 마세요. 자동 저장 될겁니다.");
+        showMsg("⚠️ 걱정 마세요. 자동 저장 될겁니다.");
       }
     })
     .finally(() => {
