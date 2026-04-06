@@ -143,17 +143,21 @@ document.getElementById("checkin-btn").disabled = true;
 
 const ok = await send({type:"attendance", ...attendanceData});
 
+// 실패해도 무조건 진행
 if(!ok){
-document.getElementById("msg").innerText="⚠️ 네트워크 불안정 (기록은 계속 진행)";
+document.getElementById("msg").innerText="⚠️ 네트워크 불안정 (그래도 진행)";
 }
 
+// 👉 여기 먼저 풀어줘야 함 (핵심🔥)
+isSending = false;
+document.getElementById("checkin-btn").disabled = false;
+
+// 👉 그 다음 화면 전환
 document.getElementById("student-name").innerText = val+"번";
 document.getElementById("time-text").innerText = attendanceData.time;
 
 document.getElementById("checkin-view").classList.add("hidden");
 document.getElementById("confirmation-view").classList.remove("hidden");
-
-isSending=false;
 }
 
 // 성찰 시작
