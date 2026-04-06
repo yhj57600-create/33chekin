@@ -291,14 +291,6 @@ function confirmCheckIn() {
   const now = new Date();
   const minutes = now.getHours() * 60 + now.getMinutes();
 
-  attendanceData = {
-    student: val,
-    time: now.toLocaleTimeString(),
-    iso: now.toISOString(),
-    minutes: minutes,
-    late: minutes > (8 * 60 + 40) ? "지각" : "정상"
-  };
-
 attendanceData = {
   student: val,
   time: now.toLocaleTimeString(),
