@@ -143,6 +143,9 @@
     <textarea id="today-input" placeholder="오늘 계획" class="w-full border p-2 rounded mb-2"></textarea>
     <textarea id="gratitude-input" placeholder="감사한 일" class="w-full border p-2 rounded mb-2"></textarea>
 
+    <p id="reflection-warning" class="hidden text-xs text-red-500 mb-3 text-center font-medium">
+  잠깐 적는게 그렇게 어려워?
+</p>
     <button id="next-btn" onclick="goPromise()" class="w-full bg-black text-white py-2 rounded">
       다음 →
     </button>
@@ -155,6 +158,9 @@
     placeholder="오늘 하루를 어떻게 보내고 싶은가요?"
     class="w-full border p-2 rounded mb-3"></textarea>
 
+    <p id="promise-warning" class="hidden text-xs text-red-500 mb-3 text-center font-medium">
+  잠깐만 자신에게 투자하자.
+</p>
     <button id="save-btn" onclick="saveReflection()"
     class="w-full bg-black text-white py-2 rounded">
       완료
@@ -353,6 +359,17 @@ function selectMood(btn, m) {
 }
 
 function goPromise() {
+  const warning = document.getElementById("reflection-warning");
+  const yesterday = document.getElementById("yesterday-input").value.trim();
+  const today = document.getElementById("today-input").value.trim();
+  const gratitude = document.getElementById("gratitude-input").value.trim();
+
+  if (!mood || !yesterday || !today || !gratitude) {
+    warning.classList.remove("hidden");
+    return;
+  }
+
+  warning.classList.add("hidden");
   document.getElementById("reflection-view").classList.add("hidden");
   document.getElementById("promise-view").classList.remove("hidden");
 }
@@ -365,11 +382,15 @@ function goFinal() {
 function saveReflection() {
   if (isSending) return;
 
-  const promiseValue = document.getElementById("promise-input").value.trim();
-  if (!promiseValue) {
-    alert("오늘의 다짐을 적어주세요!");
-    return;
-  }
+const promiseValue = document.getElementById("promise-input").value.trim();
+const promiseWarning = document.getElementById("promise-warning");
+
+if (!promiseValue) {
+  promiseWarning.classList.remove("hidden");
+  return;
+}
+
+promiseWarning.classList.add("hidden");
 
   const data = {
     type: "reflection",
